@@ -59,9 +59,8 @@ class DemoSeeder extends Seeder
 
         // 5. Create a Campaign
         $campaign = Campaign::firstOrCreate(
-            ['name' => 'Summer Promo 2026'],
+            ['title' => 'Summer Promo 2026'],
             [
-                'description' => 'Massive summer blowout sale.',
                 'master_url' => 'https://example.com/summer-sale',
                 'total_payout' => 50.00,
                 'split_member_percent' => 70,
