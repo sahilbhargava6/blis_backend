@@ -41,8 +41,7 @@ class DemoSeeder extends Seeder
         $group = Group::firstOrCreate(
             ['leader_id' => $leader->id],
             [
-                'name' => 'Alpha Team',
-                'status' => 'active',
+                'group_name' => 'Alpha Team',
             ]
         );
 
