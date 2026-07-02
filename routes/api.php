@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\AdminController;
 use App\Http\Controllers\Api\V1\LeaderController;
 use App\Http\Controllers\Api\V1\MemberController;
 use App\Http\Controllers\Api\V1\AnnouncementController;
+use App\Http\Controllers\Api\V1\LeaderboardController;
 
 Route::prefix('v1')->group(function () {
 
@@ -27,6 +28,7 @@ Route::prefix('v1')->group(function () {
     // Global APIs (Accessible to all authenticated users)
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/announcements/active', [AnnouncementController::class, 'active']);
+        Route::get('/leaderboard', [LeaderboardController::class, 'index']);
     });
 
     // 2. Public Tracking & Webhook APIs
@@ -70,5 +72,8 @@ Route::prefix('v1')->group(function () {
         Route::post('/links/customize', [MemberController::class, 'customizeLink']);
         Route::get('/stats', [MemberController::class, 'granularStats']);
         Route::post('/wallet/withdraw', [MemberController::class, 'withdraw']);
+        
+        Route::get('/postback', [MemberController::class, 'getPostbackUrl']);
+        Route::post('/postback', [MemberController::class, 'savePostbackUrl']);
     });
 });

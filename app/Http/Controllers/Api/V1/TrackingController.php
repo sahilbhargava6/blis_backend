@@ -10,6 +10,8 @@ use App\Models\Link;
 use App\Models\Transaction;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class TrackingController extends Controller
 {
@@ -92,6 +94,9 @@ class TrackingController extends Controller
                         'description' => 'Leader commission for team member click ' . $click->sub_id,
                     ]);
                 }
+
+                // Fire affiliate's S2S postback if configured
+                $this->fireAffiliatePostback($member, $click, $memberCut, $campaign->id, $request->status);
             }
 
             DB::commit();
@@ -100,6 +105,30 @@ class TrackingController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return $this->errorResponse('Failed to process postback', 500, ['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Fire a server-to-server postback to the affiliate's tracking system
+     */
+    private function fireAffiliatePostback($member, $click, $payout, $campaignId, $status)
+    {
+        if (empty($member->postback_url)) {
+            return;
+        }
+
+        try {
+            $url = str_replace(
+                ['{click_id}', '{sub_id}', '{payout}', '{campaign_id}', '{status}'],
+                [$click->id, $click->sub_id, $payout, $campaignId, $status],
+                $member->postback_url
+            );
+
+            Http::timeout(3)->get($url);
+
+            Log::info("Affiliate postback fired for member {$member->id}: {$url}");
+        } catch (\Exception $e) {
+            Log::warning("Affiliate postback failed for member {$member->id}: " . $e->getMessage());
         }
     }
 }

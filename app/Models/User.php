@@ -17,6 +17,7 @@ class User extends Authenticatable
         'password',
         'role',
         'niche_field',
+        'postback_url',
         'group_id',
         'pending_balance',
         'cleared_balance',

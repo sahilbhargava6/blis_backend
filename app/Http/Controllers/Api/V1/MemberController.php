@@ -117,4 +117,31 @@ class MemberController extends Controller
             return $this->errorResponse('Failed to process withdrawal', 500, ['error' => $e->getMessage()]);
         }
     }
+
+    /**
+     * Save or update the member's S2S postback URL
+     */
+    public function savePostbackUrl(Request $request)
+    {
+        $request->validate([
+            'postback_url' => 'nullable|url|max:500',
+        ]);
+
+        $member = $request->user();
+        $member->update(['postback_url' => $request->postback_url]);
+
+        return $this->successResponse([
+            'postback_url' => $member->postback_url,
+        ], 'Postback URL updated.');
+    }
+
+    /**
+     * Get the member's current S2S postback URL
+     */
+    public function getPostbackUrl(Request $request)
+    {
+        return $this->successResponse([
+            'postback_url' => $request->user()->postback_url,
+        ], 'Postback URL retrieved.');
+    }
 }
