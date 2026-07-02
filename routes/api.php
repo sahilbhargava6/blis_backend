@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\TrackingController;
 use App\Http\Controllers\Api\V1\AdminController;
 use App\Http\Controllers\Api\V1\LeaderController;
 use App\Http\Controllers\Api\V1\MemberController;
+use App\Http\Controllers\Api\V1\AnnouncementController;
 
 Route::prefix('v1')->group(function () {
 
@@ -20,6 +21,11 @@ Route::prefix('v1')->group(function () {
             Route::post('/logout', [AuthController::class, 'logout']);
             Route::get('/profile', [AuthController::class, 'profile']);
         });
+    });
+
+    // Global APIs (Accessible to all authenticated users)
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/announcements/active', [AnnouncementController::class, 'active']);
     });
 
     // 2. Public Tracking & Webhook APIs
@@ -36,6 +42,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/groups', [AdminController::class, 'storeGroup']);
         Route::get('/payouts', [AdminController::class, 'payouts']);
         Route::post('/payouts/{id}/approve', [AdminController::class, 'approvePayout']);
+        
+        Route::get('/announcements', [AnnouncementController::class, 'index']);
+        Route::post('/announcements', [AnnouncementController::class, 'store']);
+        Route::delete('/announcements/{id}', [AnnouncementController::class, 'destroy']);
     });
 
     // 4. Group Leader APIs
