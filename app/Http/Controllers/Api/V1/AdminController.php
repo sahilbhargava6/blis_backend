@@ -27,11 +27,25 @@ class AdminController extends Controller
         $totalRevenue = Transaction::where('type', 'commission')->sum('amount');
         $pendingPayouts = Payout::where('status', 'pending')->sum('amount');
 
+        $chartData = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = \Carbon\Carbon::now()->subDays($i)->format('Y-m-d');
+            $dailyRevenue = Transaction::where('type', 'commission')->whereDate('created_at', $date)->sum('amount');
+            $dailyConversions = Click::where('status', 'approved')->whereDate('created_at', $date)->count();
+            
+            $chartData[] = [
+                'date' => \Carbon\Carbon::parse($date)->format('M d'),
+                'revenue' => $dailyRevenue,
+                'conversions' => $dailyConversions
+            ];
+        }
+
         return $this->successResponse([
             'total_clicks' => $totalClicks,
             'conversion_rate' => round($conversionRate, 2),
             'total_revenue' => $totalRevenue,
             'pending_payouts' => $pendingPayouts,
+            'chart_data' => $chartData,
         ], 'Dashboard stats retrieved.');
     }
 

@@ -26,10 +26,22 @@ class LeaderController extends Controller
         $groupConversionRate = 0; // Requires deeper aggregation
         $accumulatedCut = Transaction::where('user_id', $leader->id)->where('type', 'commission')->sum('amount');
 
+        $chartData = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = \Carbon\Carbon::now()->subDays($i)->format('Y-m-d');
+            $dailyRevenue = Transaction::where('user_id', $leader->id)->where('type', 'commission')->whereDate('created_at', $date)->sum('amount');
+            
+            $chartData[] = [
+                'date' => \Carbon\Carbon::parse($date)->format('M d'),
+                'revenue' => $dailyRevenue,
+            ];
+        }
+
         return $this->successResponse([
             'total_group_clicks' => $totalGroupClicks,
             'group_conversion_rate' => $groupConversionRate,
             'accumulated_leader_cut' => $accumulatedCut,
+            'chart_data' => $chartData,
         ], 'Leader stats retrieved.');
     }
 

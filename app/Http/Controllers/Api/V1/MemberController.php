@@ -26,11 +26,23 @@ class MemberController extends Controller
         $personalClicks = Click::whereIn('link_id', $linkIds)->count();
         $successfulConversions = Click::whereIn('link_id', $linkIds)->where('status', 'approved')->count();
 
+        $chartData = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = \Carbon\Carbon::now()->subDays($i)->format('Y-m-d');
+            $dailyConversions = Click::whereIn('link_id', $linkIds)->where('status', 'approved')->whereDate('created_at', $date)->count();
+            
+            $chartData[] = [
+                'date' => \Carbon\Carbon::parse($date)->format('M d'),
+                'conversions' => $dailyConversions,
+            ];
+        }
+
         return $this->successResponse([
             'personal_clicks' => $personalClicks,
             'successful_conversions' => $successfulConversions,
             'pending_balance' => (float) $member->pending_balance,
             'cleared_balance' => (float) $member->cleared_balance,
+            'chart_data' => $chartData,
         ], 'Member stats retrieved.');
     }
 
