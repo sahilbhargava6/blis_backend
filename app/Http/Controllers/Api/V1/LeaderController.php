@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Campaign;
 use App\Models\Link;
 use App\Models\Group;
+use App\Models\GroupInvitation;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -70,10 +71,37 @@ class LeaderController extends Controller
             return $this->errorResponse('Group has reached maximum limit of 20 members.');
         }
 
-        $member = User::findOrFail($request->member_id);
-        $member->update(['group_id' => $group->id]);
+        // Check if there's already an active (unexpired, unused) invitation for this email
+        $existingInvite = GroupInvitation::where('email', $request->email)
+            ->where('is_used', false)
+            ->where('expires_at', '>', \Carbon\Carbon::now())
+            ->first();
 
-        return $this->successResponse($member, 'Member invited successfully.');
+        if ($existingInvite) {
+            $frontendUrl = env('FRONTEND_URL', 'http://localhost:3004');
+            $inviteLink = $frontendUrl . '/register?invite_token=' . $existingInvite->token;
+            return $this->successResponse([
+                'invitation' => $existingInvite,
+                'invite_link' => $inviteLink
+            ], 'Active invitation already exists. Link retrieved.');
+        }
+
+        $token = Str::random(40);
+        $invitation = GroupInvitation::create([
+            'group_id' => $group->id,
+            'email' => $request->email,
+            'token' => $token,
+            'is_used' => false,
+            'expires_at' => \Carbon\Carbon::now()->addDays(7),
+        ]);
+
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:3004');
+        $inviteLink = $frontendUrl . '/register?invite_token=' . $token;
+
+        return $this->successResponse([
+            'invitation' => $invitation,
+            'invite_link' => $inviteLink
+        ], 'Invitation generated successfully.');
     }
 
     public function removeMember(Request $request, $id)

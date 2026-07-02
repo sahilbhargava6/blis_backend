@@ -16,17 +16,56 @@ class AuthController extends Controller
     use ApiResponse;
 
     /**
+     * Validate a tokenized invitation
+     */
+    public function validateInvitation($token)
+    {
+        $invitation = \App\Models\GroupInvitation::where('token', $token)
+            ->where('is_used', false)
+            ->where('expires_at', '>', \Carbon\Carbon::now())
+            ->with('group.leader')
+            ->first();
+
+        if (!$invitation) {
+            return $this->errorResponse('Invalid, used, or expired invitation token.', 404);
+        }
+
+        return $this->successResponse($invitation, 'Invitation token is valid.');
+    }
+
+    /**
      * Register a new user (Member or Leader)
      */
     public function register(RegisterRequest $request)
     {
+        $groupId = null;
+        $invitation = null;
+
+        if ($request->filled('invite_token')) {
+            $invitation = \App\Models\GroupInvitation::where('token', $request->invite_token)
+                ->where('is_used', false)
+                ->where('expires_at', '>', \Carbon\Carbon::now())
+                ->first();
+
+            if (!$invitation) {
+                return $this->errorResponse('Invalid, used, or expired invitation token.', 422);
+            }
+
+            $groupId = $invitation->group_id;
+        }
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->role,
+            'role' => $groupId ? 'member' : $request->role,
+            'group_id' => $groupId,
             'niche_field' => $request->niche_field,
         ]);
+
+        if ($invitation) {
+            $invitation->update(['is_used' => true]);
+        }
 
         $token = $user->createToken('api_token')->plainTextToken;
 

@@ -27,6 +27,7 @@ class RegisterRequest extends FormRequest
             'password' => 'required|string|min:8',
             'role' => 'required|string|in:leader,member',
             'niche_field' => 'nullable|string|max:255',
+            'invite_token' => 'nullable|string|exists:group_invitations,token',
         ];
     }
 }
