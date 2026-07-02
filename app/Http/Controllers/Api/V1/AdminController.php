@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\StoreCampaignRequest;
 use App\Http\Requests\Admin\UpdateCampaignRequest;
 use App\Http\Requests\Admin\StoreGroupRequest;
 use App\Models\Campaign;
+use App\Models\CampaignAsset;
 use App\Models\Group;
 use App\Models\Payout;
 use App\Models\Click;
@@ -51,7 +52,7 @@ class AdminController extends Controller
 
     public function index()
     {
-        $campaigns = Campaign::paginate(20);
+        $campaigns = Campaign::with('assets')->paginate(20);
         return $this->successResponse($campaigns, 'Campaigns listed.');
     }
 
@@ -105,5 +106,26 @@ class AdminController extends Controller
         // Here you would trigger the payment queue job: dispatch(new ProcessPayment($payout));
 
         return $this->successResponse($payout, 'Payout approved.');
+    }
+
+    public function storeAsset(Request $request, $campaign_id)
+    {
+        $campaign = Campaign::findOrFail($campaign_id);
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|string|in:link,text,banner',
+            'content' => 'required|string',
+            'description' => 'nullable|string|max:255',
+        ]);
+
+        $asset = $campaign->assets()->create($validated);
+        return $this->successResponse($asset, 'Campaign asset created.', 201);
+    }
+
+    public function destroyAsset($campaign_id, $asset_id)
+    {
+        $asset = CampaignAsset::where('campaign_id', $campaign_id)->findOrFail($asset_id);
+        $asset->delete();
+        return $this->successResponse(null, 'Campaign asset deleted.');
     }
 }

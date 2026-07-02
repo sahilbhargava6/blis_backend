@@ -52,7 +52,7 @@ class MemberController extends Controller
         $member = $request->user();
         $campaignIds = Link::where('user_id', $member->id)->pluck('campaign_id');
         
-        $campaigns = Campaign::whereIn('id', $campaignIds)->where('is_active', true)->get();
+        $campaigns = Campaign::whereIn('id', $campaignIds)->where('is_active', true)->with('assets')->get();
         return $this->successResponse($campaigns, 'Group-curated offer cards retrieved.');
     }
 

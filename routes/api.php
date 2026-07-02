@@ -38,6 +38,8 @@ Route::prefix('v1')->group(function () {
     Route::prefix('admin')->middleware(['auth:sanctum', RoleMiddleware::class.':admin'])->group(function () {
         Route::get('/dashboard/stats', [AdminController::class, 'stats']);
         Route::apiResource('campaigns', AdminController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::post('/campaigns/{campaign_id}/assets', [AdminController::class, 'storeAsset']);
+        Route::delete('/campaigns/{campaign_id}/assets/{asset_id}', [AdminController::class, 'destroyAsset']);
         Route::get('/groups', [AdminController::class, 'groups']);
         Route::post('/groups', [AdminController::class, 'storeGroup']);
         Route::get('/payouts', [AdminController::class, 'payouts']);

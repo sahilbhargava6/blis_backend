@@ -22,4 +22,9 @@ class Campaign extends Model
     {
         return $this->hasMany(Link::class);
     }
+
+    public function assets()
+    {
+        return $this->hasMany(CampaignAsset::class);
+    }
 }

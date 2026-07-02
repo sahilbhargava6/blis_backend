@@ -93,7 +93,7 @@ class LeaderController extends Controller
 
     public function campaigns()
     {
-        $campaigns = Campaign::where('is_active', true)->get();
+        $campaigns = Campaign::where('is_active', true)->with('assets')->get();
         return $this->successResponse($campaigns, 'Master campaigns retrieved.');
     }
 
